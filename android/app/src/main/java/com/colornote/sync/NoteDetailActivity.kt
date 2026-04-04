@@ -255,6 +255,7 @@ class NoteDetailActivity : AppCompatActivity() {
                     DateUtils.MINUTE_IN_MILLIS
                 )
                 textTimestamp.text = relativeTime
+                AutoSyncManager.notifyDataChanged()
             }
         }
     }
@@ -287,6 +288,7 @@ class NoteDetailActivity : AppCompatActivity() {
             val sorted = items.sortedBy { it.sortOrder }
             adapter.setItems(sorted)
             WidgetProvider.refreshAllWidgets(this@NoteDetailActivity)
+            AutoSyncManager.notifyDataChanged()
         }
     }
 
@@ -316,6 +318,7 @@ class NoteDetailActivity : AppCompatActivity() {
                             dao.deleteNote(note)
                         }
                     }
+                    AutoSyncManager.notifyDataChanged()
                     finish()
                 }
             }

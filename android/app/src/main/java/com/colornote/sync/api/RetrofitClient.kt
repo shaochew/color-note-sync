@@ -1,8 +1,10 @@
 package com.colornote.sync.api
 
 import android.content.Context
+import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import java.util.concurrent.TimeUnit
 
 object RetrofitClient {
 
@@ -12,6 +14,12 @@ object RetrofitClient {
     private var cachedUrl: String? = null
     private var cachedService: ApiService? = null
 
+    private val httpClient = OkHttpClient.Builder()
+        .connectTimeout(60, TimeUnit.SECONDS)
+        .readTimeout(60, TimeUnit.SECONDS)
+        .writeTimeout(60, TimeUnit.SECONDS)
+        .build()
+
     val apiService: ApiService by lazy {
         createService()
     }
@@ -19,6 +27,7 @@ object RetrofitClient {
     private fun createService(): ApiService {
         return Retrofit.Builder()
             .baseUrl(baseUrl)
+            .client(httpClient)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
             .create(ApiService::class.java)
@@ -48,6 +57,7 @@ object RetrofitClient {
         cachedUrl = newBaseUrl
         val service = Retrofit.Builder()
             .baseUrl(baseUrl)
+            .client(httpClient)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
             .create(ApiService::class.java)

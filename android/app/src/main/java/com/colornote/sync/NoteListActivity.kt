@@ -192,6 +192,7 @@ class NoteListActivity : AppCompatActivity() {
         lifecycleScope.launch(Dispatchers.IO) {
             noteDao.insertNote(note)
         }
+        AutoSyncManager.notifyDataChanged()
 
         openNoteDetail(noteId)
     }

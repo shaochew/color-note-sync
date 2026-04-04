@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<GridLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:columnCount="4"
+    android:rowCount="2"
+    android:padding="16dp"
+    android:useDefaultMargins="true">
+
+    <View
+        android:id="@+id/colorYellow"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_margin="8dp"
+        android:background="@color/note_yellow"
+        android:tag="#FFEB3B" />
+
+    <View
+        android:id="@+id/colorGreen"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_margin="8dp"
+        android:background="@color/note_green"
+        android:tag="#4CAF50" />
+
+    <View
+        android:id="@+id/colorBlue"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_margin="8dp"
+        android:background="@color/note_blue"
+        android:tag="#2196F3" />
+
+    <View
+        android:id="@+id/colorPink"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_margin="8dp"
+        android:background="@color/note_pink"
+        android:tag="#E91E63" />
+
+    <View
+        android:id="@+id/colorOrange"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_margin="8dp"
+        android:background="@color/note_orange"
+        android:tag="#FF9800" />
+
+    <View
+        android:id="@+id/colorWhite"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_margin="8dp"
+        android:background="@color/note_white"
+        android:tag="#FFFFFF" />
+
+    <View
+        android:id="@+id/colorPurple"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_margin="8dp"
+        android:background="@color/note_purple"
+        android:tag="#9C27B0" />
+
+    <View
+        android:id="@+id/colorRed"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_margin="8dp"
+        android:background="@color/note_red"
+        android:tag="#F44336" />
+
+</GridLayout>

@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Notes - Color Note Sync{% endblock %}
+{% block content %}
+<div id="notes-page">
+    <div id="notes-grid" class="notes-grid">
+        <!-- Cards rendered by JS -->
+    </div>
+    <div class="empty-state" id="empty-state" style="display:none;">
+        <p>No notes yet. Tap + to create one.</p>
+    </div>
+    <button class="fab" id="fab-new-note" title="New note">+</button>
+</div>
+
+<!-- New Note Dialog -->
+<div class="modal-overlay" id="new-note-modal" style="display:none;">
+    <div class="modal">
+        <h3 class="modal-title">New Note</h3>
+        <div class="form-group">
+            <label for="new-note-title">Title</label>
+            <input type="text" id="new-note-title" placeholder="Note title" autofocus>
+        </div>
+        <div class="form-group">
+            <label>Color</label>
+            <div class="color-picker" id="new-note-color-picker"></div>
+        </div>
+        <div class="modal-actions">
+            <button class="btn btn-cancel" id="new-note-cancel">CANCEL</button>
+            <button class="btn btn-ok" id="new-note-ok">OK</button>
+        </div>
+    </div>
+</div>
+{% endblock %}

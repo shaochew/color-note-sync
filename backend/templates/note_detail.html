@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Note - Color Note Sync{% endblock %}
+{% block content %}
+<div id="note-detail-page" data-note-id="{{ note_id }}">
+    <!-- Header -->
+    <div class="detail-header" id="detail-header">
+        <a href="{{ url_for('notes_page') }}" class="header-btn back-btn" title="Back">&larr;</a>
+        <h2 class="detail-title" id="detail-title"></h2>
+        <input type="text" class="detail-title-input" id="detail-title-input" style="display:none;">
+        <div class="detail-color-picker" id="detail-color-picker" style="display:none;"></div>
+        <button class="header-btn edit-btn" id="edit-toggle-btn" title="Edit">&#9998;</button>
+        <div class="header-menu-wrapper">
+            <button class="header-btn menu-btn" id="menu-btn" title="Menu">&#8942;</button>
+            <div class="dropdown-menu" id="dropdown-menu" style="display:none;">
+                <button class="dropdown-item danger" id="delete-note-btn">Delete Note</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="detail-meta" id="detail-meta"></div>
+
+    <!-- Edit mode toolbar -->
+    <div class="edit-toolbar" id="edit-toolbar" style="display:none;">
+        <button class="btn btn-add-item" id="add-item-btn">&#8853; Add Item</button>
+    </div>
+
+    <!-- Items list -->
+    <ul class="items-list" id="items-list"></ul>
+
+    <!-- Undo/Redo bar (edit mode) -->
+    <div class="undo-redo-bar" id="undo-redo-bar" style="display:none;">
+        <button class="btn btn-undo" id="undo-btn" title="Undo" disabled>&#8630; Undo</button>
+        <button class="btn btn-redo" id="redo-btn" title="Redo" disabled>&#8631; Redo</button>
+    </div>
+</div>
+
+<!-- Add Item Dialog -->
+<div class="modal-overlay" id="add-item-modal" style="display:none;">
+    <div class="modal">
+        <h3 class="modal-title">Add Item</h3>
+        <div class="form-group">
+            <input type="text" id="add-item-text" placeholder="Item text" autofocus>
+        </div>
+        <div class="modal-actions modal-actions-three">
+            <button class="btn btn-next" id="add-item-next">NEXT</button>
+            <button class="btn btn-cancel" id="add-item-cancel">CANCEL</button>
+            <button class="btn btn-ok" id="add-item-ok">OK</button>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Dialog -->
+<div class="modal-overlay" id="delete-confirm-modal" style="display:none;">
+    <div class="modal">
+        <h3 class="modal-title">Delete Note</h3>
+        <p>Are you sure you want to delete this note?</p>
+        <div class="modal-actions">
+            <button class="btn btn-cancel" id="delete-cancel">CANCEL</button>
+            <button class="btn btn-danger" id="delete-confirm">DELETE</button>
+        </div>
+    </div>
+</div>
+{% endblock %}

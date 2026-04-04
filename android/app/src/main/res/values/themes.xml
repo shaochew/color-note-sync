@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.ColorNoteSync" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
+        <item name="colorPrimary">#FFEB3B</item>
+        <item name="colorPrimaryVariant">#FBC02D</item>
+        <item name="colorOnPrimary">#000000</item>
+        <item name="colorSecondary">#FFC107</item>
+        <item name="colorSecondaryVariant">#FFA000</item>
+        <item name="colorOnSecondary">#000000</item>
+    </style>
+</resources>

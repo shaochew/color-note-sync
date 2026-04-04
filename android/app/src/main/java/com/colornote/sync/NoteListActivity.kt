@@ -2,6 +2,7 @@ package com.colornote.sync
 
 import android.content.Intent
 import android.graphics.Color
+import android.util.Log
 import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.view.Menu
@@ -9,7 +10,6 @@ import android.view.MenuItem
 import android.view.View
 import android.widget.EditText
 import android.widget.FrameLayout
-import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
@@ -50,11 +50,6 @@ class NoteListActivity : AppCompatActivity() {
         tvEmptyState = findViewById(R.id.tvEmptyState)
         fabAddNote = findViewById(R.id.fabAddNote)
 
-        val btnSync = findViewById<ImageButton>(R.id.btnSync)
-        btnSync.setOnClickListener {
-            performSync()
-        }
-
         adapter = NoteListAdapter { noteId ->
             openNoteDetail(noteId)
         }
@@ -71,10 +66,12 @@ class NoteListActivity : AppCompatActivity() {
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.menu_note_list, menu)
+        Log.d("ColorNoteSync", "Menu inflated with ${menu.size()} items")
         return true
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        Log.d("ColorNoteSync", "Menu item selected: ${item.title}")
         return when (item.itemId) {
             R.id.action_sync -> {
                 performSync()
@@ -89,22 +86,25 @@ class NoteListActivity : AppCompatActivity() {
     }
 
     private fun performSync() {
+        Log.d("ColorNoteSync", "performSync() called")
         val apiService = RetrofitClient.getService(this)
         val syncManager = SyncManager(noteDao, apiService)
 
         Toast.makeText(this, "Syncing...", Toast.LENGTH_SHORT).show()
 
         lifecycleScope.launch {
+            Log.d("ColorNoteSync", "Starting sync coroutine...")
             val result = withContext(Dispatchers.IO) {
                 syncManager.sync()
             }
 
+            Log.d("ColorNoteSync", "Sync result: success=${result.success} message=${result.message}")
+
             if (result.success) {
                 Toast.makeText(this@NoteListActivity, result.message, Toast.LENGTH_SHORT).show()
-                // Refresh widgets after successful sync
                 WidgetProvider.refreshAllWidgets(this@NoteListActivity)
             } else {
-                Toast.makeText(this@NoteListActivity, result.message, Toast.LENGTH_LONG).show()
+                Toast.makeText(this@NoteListActivity, "Sync failed: ${result.message}", Toast.LENGTH_LONG).show()
             }
         }
     }

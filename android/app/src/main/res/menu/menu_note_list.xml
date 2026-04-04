@@ -6,7 +6,7 @@
         android:id="@+id/action_sync"
         android:title="Sync"
         android:icon="@drawable/ic_sync"
-        app:showAsAction="never" />
+        app:showAsAction="always" />
 
     <item
         android:id="@+id/action_settings"

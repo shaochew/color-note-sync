@@ -14,7 +14,7 @@ import com.colornote.sync.data.AppDatabase
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 
-class WidgetProvider : AppWidgetProvider() {
+open class WidgetProvider : AppWidgetProvider() {
 
     override fun onUpdate(
         context: Context,
@@ -168,12 +168,19 @@ class WidgetProvider : AppWidgetProvider() {
          */
         fun refreshAllWidgets(context: Context) {
             val appWidgetManager = AppWidgetManager.getInstance(context)
-            val componentName = ComponentName(context, WidgetProvider::class.java)
-            val widgetIds = appWidgetManager.getAppWidgetIds(componentName)
-            for (widgetId in widgetIds) {
-                val noteId = getWidgetNoteId(context, widgetId)
-                if (noteId != null) {
-                    updateWidget(context, appWidgetManager, widgetId, noteId)
+            val providers: List<Class<*>> = listOf(
+                WidgetProvider::class.java,
+                WidgetProvider2x4::class.java,
+                WidgetProvider4x4::class.java
+            )
+            for (providerClass in providers) {
+                val componentName = ComponentName(context, providerClass)
+                val widgetIds = appWidgetManager.getAppWidgetIds(componentName)
+                for (widgetId in widgetIds) {
+                    val noteId = getWidgetNoteId(context, widgetId)
+                    if (noteId != null) {
+                        updateWidget(context, appWidgetManager, widgetId, noteId)
+                    }
                 }
             }
         }

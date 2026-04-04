@@ -286,6 +286,7 @@ class NoteDetailActivity : AppCompatActivity() {
             }
             val sorted = items.sortedBy { it.sortOrder }
             adapter.setItems(sorted)
+            WidgetProvider.refreshAllWidgets(this@NoteDetailActivity)
         }
     }
 

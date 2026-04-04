@@ -167,51 +167,75 @@ def reorder_items(note_id):
 # API — Sync
 # ---------------------------------------------------------------------------
 
+def parse_iso_datetime(s):
+    """Parse ISO 8601 string to naive UTC datetime."""
+    if not s:
+        return datetime.now(timezone.utc).replace(tzinfo=None)
+    s = s.replace("Z", "+00:00")
+    dt = datetime.fromisoformat(s)
+    # Convert to naive UTC
+    if dt.tzinfo is not None:
+        dt = dt.astimezone(timezone.utc).replace(tzinfo=None)
+    return dt
+
+
 @app.route("/api/sync", methods=["POST"])
 def sync():
-    data = request.get_json(silent=True) or {}
-    client_notes = data.get("notes", [])
+    try:
+        data = request.get_json(silent=True) or {}
+        client_notes = data.get("notes", [])
 
-    for cn in client_notes:
-        client_updated = datetime.fromisoformat(cn["updated_at"].replace("Z", ""))
-        server_note = db.session.get(Note, cn.get("id"))
+        for cn in client_notes:
+            client_updated = parse_iso_datetime(cn.get("updated_at"))
+            client_created = parse_iso_datetime(cn.get("created_at"))
+            server_note = db.session.get(Note, cn.get("id"))
 
-        if server_note and server_note.updated_at > client_updated:
-            # Server is newer — keep server version
-            continue
+            if server_note:
+                server_updated = server_note.updated_at
+                if server_updated.tzinfo is not None:
+                    server_updated = server_updated.astimezone(timezone.utc).replace(tzinfo=None)
+                if server_updated > client_updated:
+                    # Server is newer — keep server version
+                    continue
 
-        # Client is newer or note doesn't exist — replace with client version
-        if server_note:
-            # Delete existing items
-            NoteItem.query.filter_by(note_id=server_note.id).delete()
-            server_note.title = cn.get("title", "")
-            server_note.color = cn.get("color", "#FFEB3B")
-            server_note.updated_at = client_updated
-        else:
-            server_note = Note(
-                id=cn.get("id", str(uuid.uuid4())),
-                title=cn.get("title", ""),
-                color=cn.get("color", "#FFEB3B"),
-                updated_at=client_updated,
-            )
-            db.session.add(server_note)
+            # Client is newer or note doesn't exist — replace with client version
+            if server_note:
+                # Delete existing items
+                NoteItem.query.filter_by(note_id=server_note.id).delete()
+                server_note.title = cn.get("title", "")
+                server_note.color = cn.get("color", "#FFEB3B")
+                server_note.updated_at = client_updated
+                server_note.created_at = client_created
+            else:
+                server_note = Note(
+                    id=cn.get("id", str(uuid.uuid4())),
+                    title=cn.get("title", ""),
+                    color=cn.get("color", "#FFEB3B"),
+                    updated_at=client_updated,
+                    created_at=client_created,
+                )
+                db.session.add(server_note)
 
-        # Add client items
-        for ci in cn.get("items", []):
-            item = NoteItem(
-                id=ci.get("id", str(uuid.uuid4())),
-                note_id=server_note.id,
-                text=ci.get("text", ""),
-                is_done=ci.get("is_done", False),
-                sort_order=ci.get("sort_order", 0),
-            )
-            db.session.add(item)
+            # Add client items
+            for ci in cn.get("items", []):
+                item = NoteItem(
+                    id=ci.get("id", str(uuid.uuid4())),
+                    note_id=server_note.id,
+                    text=ci.get("text", ""),
+                    is_done=ci.get("is_done", False),
+                    sort_order=ci.get("sort_order", 0),
+                    created_at=parse_iso_datetime(ci.get("created_at")),
+                )
+                db.session.add(item)
 
-    db.session.commit()
+        db.session.commit()
 
-    # Return full server state
-    notes = Note.query.order_by(Note.updated_at.desc()).all()
-    return jsonify({"notes": [n.to_dict() for n in notes]}), 200
+        # Return full server state
+        notes = Note.query.order_by(Note.updated_at.desc()).all()
+        return jsonify({"notes": [n.to_dict() for n in notes]}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
 
 
 # ---------------------------------------------------------------------------

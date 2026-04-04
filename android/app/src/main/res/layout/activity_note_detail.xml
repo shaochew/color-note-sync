@@ -151,36 +151,6 @@
         android:paddingEnd="8dp"
         android:clipToPadding="false" />
 
-    <!-- Add Item bar at bottom (edit mode only) -->
-    <LinearLayout
-        android:id="@+id/addItemBarBottom"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp"
-        android:paddingTop="8dp"
-        android:paddingBottom="8dp"
-        android:visibility="gone">
-
-        <ImageView
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:src="@drawable/ic_add_circle"
-            android:contentDescription="Add" />
-
-        <TextView
-            android:id="@+id/btnAddItemBottom"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Add Item"
-            android:textSize="16sp"
-            android:paddingStart="8dp"
-            android:clickable="true"
-            android:focusable="true" />
-    </LinearLayout>
-
     <!-- Bottom bar: undo/redo (edit mode only) -->
     <LinearLayout
         android:id="@+id/bottomBar"

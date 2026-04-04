@@ -18,12 +18,15 @@ class NoteDetailAdapter(
     private val onToggleDone: (NoteItemEntity) -> Unit,
     private val onDeleteItem: (NoteItemEntity) -> Unit,
     private val onItemClick: (NoteItemEntity) -> Unit,
-    private val onStartDrag: ((RecyclerView.ViewHolder) -> Unit)? = null
+    private val onStartDrag: ((RecyclerView.ViewHolder) -> Unit)? = null,
+    private val onAddItem: (() -> Unit)? = null,
+    private val onEditItem: ((NoteItemEntity) -> Unit)? = null
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     companion object {
         private const val VIEW_TYPE_VIEW = 0
         private const val VIEW_TYPE_EDIT = 1
+        private const val VIEW_TYPE_FOOTER = 2
     }
 
     private val items = mutableListOf<NoteItemEntity>()
@@ -49,29 +52,37 @@ class NoteDetailAdapter(
     }
 
     override fun getItemViewType(position: Int): Int {
+        if (isEditMode && position == items.size) return VIEW_TYPE_FOOTER
         return if (isEditMode) VIEW_TYPE_EDIT else VIEW_TYPE_VIEW
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         val inflater = LayoutInflater.from(parent.context)
-        return if (viewType == VIEW_TYPE_EDIT) {
-            val view = inflater.inflate(R.layout.item_note_edit, parent, false)
-            EditViewHolder(view)
-        } else {
-            val view = inflater.inflate(R.layout.item_note_view, parent, false)
-            ViewViewHolder(view)
+        return when (viewType) {
+            VIEW_TYPE_EDIT -> {
+                val view = inflater.inflate(R.layout.item_note_edit, parent, false)
+                EditViewHolder(view)
+            }
+            VIEW_TYPE_FOOTER -> {
+                val view = inflater.inflate(R.layout.item_add_footer, parent, false)
+                FooterViewHolder(view)
+            }
+            else -> {
+                val view = inflater.inflate(R.layout.item_note_view, parent, false)
+                ViewViewHolder(view)
+            }
         }
     }
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-        val item = items[position]
         when (holder) {
-            is ViewViewHolder -> holder.bind(item)
-            is EditViewHolder -> holder.bind(item)
+            is FooterViewHolder -> holder.bind()
+            is ViewViewHolder -> holder.bind(items[position])
+            is EditViewHolder -> holder.bind(items[position])
         }
     }
 
-    override fun getItemCount(): Int = items.size
+    override fun getItemCount(): Int = items.size + if (isEditMode) 1 else 0
 
     inner class ViewViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val textContent: TextView = itemView.findViewById(R.id.textItemContent)
@@ -120,6 +131,10 @@ class NoteDetailAdapter(
                 textContent.setTextColor(Color.BLACK)
             }
 
+            textContent.setOnClickListener {
+                onEditItem?.invoke(item)
+            }
+
             btnDelete.setOnClickListener {
                 onDeleteItem(item)
             }
@@ -129,6 +144,14 @@ class NoteDetailAdapter(
                     onStartDrag?.invoke(this)
                 }
                 false
+            }
+        }
+    }
+
+    inner class FooterViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        fun bind() {
+            itemView.setOnClickListener {
+                onAddItem?.invoke()
             }
         }
     }

@@ -50,8 +50,6 @@ class NoteDetailActivity : AppCompatActivity() {
     private lateinit var recyclerItems: RecyclerView
     private lateinit var addItemBar: LinearLayout
     private lateinit var btnAddItem: TextView
-    private lateinit var addItemBarBottom: LinearLayout
-    private lateinit var btnAddItemBottom: TextView
     private lateinit var btnColorPicker: ImageButton
     private lateinit var bottomBar: LinearLayout
     private lateinit var btnUndo: ImageButton
@@ -88,8 +86,6 @@ class NoteDetailActivity : AppCompatActivity() {
         recyclerItems = findViewById(R.id.recyclerItems)
         addItemBar = findViewById(R.id.addItemBar)
         btnAddItem = findViewById(R.id.btnAddItem)
-        addItemBarBottom = findViewById(R.id.addItemBarBottom)
-        btnAddItemBottom = findViewById(R.id.btnAddItemBottom)
         btnColorPicker = findViewById(R.id.btnColorPicker)
         bottomBar = findViewById(R.id.bottomBar)
         btnUndo = findViewById(R.id.btnUndo)
@@ -102,7 +98,9 @@ class NoteDetailActivity : AppCompatActivity() {
             onToggleDone = { item -> toggleItemDone(item) },
             onDeleteItem = { item -> deleteItem(item) },
             onItemClick = { /* item menu click in view mode - no-op for now */ },
-            onStartDrag = { viewHolder -> itemTouchHelper?.startDrag(viewHolder) }
+            onStartDrag = { viewHolder -> itemTouchHelper?.startDrag(viewHolder) },
+            onAddItem = { showAddItemDialog() },
+            onEditItem = { item -> showEditItemDialog(item) }
         )
 
         recyclerItems.layoutManager = LinearLayoutManager(this)
@@ -144,14 +142,6 @@ class NoteDetailActivity : AppCompatActivity() {
 
         btnColorPicker.setOnClickListener {
             showColorPickerDialog()
-        }
-
-        addItemBarBottom.setOnClickListener {
-            showAddItemDialog()
-        }
-
-        btnAddItemBottom.setOnClickListener {
-            showAddItemDialog()
         }
 
         btnUndo.setOnClickListener { performUndo() }
@@ -214,7 +204,6 @@ class NoteDetailActivity : AppCompatActivity() {
         btnColorPicker.visibility = View.VISIBLE
         textEditingLabel.visibility = View.VISIBLE
         addItemBar.visibility = View.VISIBLE
-        addItemBarBottom.visibility = View.VISIBLE
         bottomBar.visibility = View.VISIBLE
 
         btnEditSave.setImageResource(R.drawable.ic_check)
@@ -238,7 +227,6 @@ class NoteDetailActivity : AppCompatActivity() {
         btnColorPicker.visibility = View.GONE
         textEditingLabel.visibility = View.GONE
         addItemBar.visibility = View.GONE
-        addItemBarBottom.visibility = View.GONE
         bottomBar.visibility = View.GONE
 
         btnEditSave.setImageResource(R.drawable.ic_edit)
@@ -366,6 +354,35 @@ class NoteDetailActivity : AppCompatActivity() {
         }
     }
 
+    private fun showEditItemDialog(item: NoteItemEntity) {
+        val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_add_item, null)
+        val editItemText = dialogView.findViewById<EditText>(R.id.editItemText)
+        editItemText.setText(item.text)
+        editItemText.setSelection(item.text.length)
+
+        AlertDialog.Builder(this)
+            .setView(dialogView)
+            .setPositiveButton("OK") { _, _ ->
+                val newText = editItemText.text.toString().trim()
+                if (newText.isNotEmpty() && newText != item.text) {
+                    updateItemText(item, newText)
+                }
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun updateItemText(item: NoteItemEntity, newText: String) {
+        pushUndoState()
+        lifecycleScope.launch {
+            val updatedItem = item.copy(text = newText)
+            withContext(Dispatchers.IO) {
+                dao.updateItem(updatedItem)
+            }
+            refreshItems()
+        }
+    }
+
     private fun addNewItem(text: String) {
         pushUndoState()
         lifecycleScope.launch {
@@ -442,12 +459,32 @@ class NoteDetailActivity : AppCompatActivity() {
             ): Boolean {
                 val fromPos = viewHolder.adapterPosition
                 val toPos = target.adapterPosition
+                // Don't allow moving to/from the footer position
+                if (fromPos >= adapter.getItems().size || toPos >= adapter.getItems().size) return false
                 adapter.moveItem(fromPos, toPos)
                 return true
             }
 
+            override fun canDropOver(
+                recyclerView: RecyclerView,
+                current: RecyclerView.ViewHolder,
+                target: RecyclerView.ViewHolder
+            ): Boolean {
+                // Don't allow dropping onto the footer
+                return target.adapterPosition < adapter.getItems().size
+            }
+
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
                 // No swipe
+            }
+
+            override fun getMovementFlags(
+                recyclerView: RecyclerView,
+                viewHolder: RecyclerView.ViewHolder
+            ): Int {
+                // Don't allow dragging the footer
+                if (viewHolder is NoteDetailAdapter.FooterViewHolder) return 0
+                return makeMovementFlags(ItemTouchHelper.UP or ItemTouchHelper.DOWN, 0)
             }
 
             override fun onSelectedChanged(viewHolder: RecyclerView.ViewHolder?, actionState: Int) {

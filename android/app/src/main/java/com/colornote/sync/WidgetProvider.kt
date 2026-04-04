@@ -171,6 +171,7 @@ open class WidgetProvider : AppWidgetProvider() {
             val providers: List<Class<*>> = listOf(
                 WidgetProvider::class.java,
                 WidgetProvider2x4::class.java,
+                WidgetProvider4x2::class.java,
                 WidgetProvider4x4::class.java
             )
             for (providerClass in providers) {

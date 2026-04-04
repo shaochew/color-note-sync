@@ -7,7 +7,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 object RetrofitClient {
 
     // Default points to host machine from Android emulator
-    var baseUrl: String = "http://localhost:5001/"
+    var baseUrl: String = "https://color-note-sync.onrender.com/"
 
     private var cachedUrl: String? = null
     private var cachedService: ApiService? = null
@@ -30,7 +30,7 @@ object RetrofitClient {
      */
     fun getService(context: Context): ApiService {
         val prefs = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
-        val savedUrl = prefs.getString("server_url", "http://localhost:5001") ?: "http://localhost:5001"
+        val savedUrl = prefs.getString("server_url", "https://color-note-sync.onrender.com") ?: "https://color-note-sync.onrender.com"
         val normalizedUrl = if (savedUrl.endsWith("/")) savedUrl else "$savedUrl/"
 
         if (normalizedUrl == cachedUrl && cachedService != null) {

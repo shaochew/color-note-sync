@@ -33,7 +33,7 @@ class SettingsActivity : AppCompatActivity() {
 
         // Load current URL
         val prefs = getSharedPreferences("settings", MODE_PRIVATE)
-        val currentUrl = prefs.getString("server_url", "http://10.0.2.2:5001") ?: "http://10.0.2.2:5001"
+        val currentUrl = prefs.getString("server_url", "https://color-note-sync.onrender.com") ?: "https://color-note-sync.onrender.com"
         etServerUrl.setText(currentUrl)
 
         btnSave.setOnClickListener {

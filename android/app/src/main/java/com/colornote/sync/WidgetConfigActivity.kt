@@ -5,12 +5,14 @@ import android.content.Intent
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.BaseAdapter
 import android.widget.ListView
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.colornote.sync.data.AppDatabase
 import com.colornote.sync.data.NoteWithItems
@@ -34,7 +36,10 @@ class WidgetConfigActivity : AppCompatActivity() {
             AppWidgetManager.INVALID_APPWIDGET_ID
         ) ?: AppWidgetManager.INVALID_APPWIDGET_ID
 
+        Log.d("ColorNoteSync", "WidgetConfigActivity: appWidgetId=$appWidgetId")
+
         if (appWidgetId == AppWidgetManager.INVALID_APPWIDGET_ID) {
+            Log.e("ColorNoteSync", "WidgetConfigActivity: INVALID widget ID, finishing")
             finish()
             return
         }
@@ -45,6 +50,14 @@ class WidgetConfigActivity : AppCompatActivity() {
         val db = AppDatabase.getDatabase(this)
         notes = runBlocking {
             db.noteDao().getAllNotes().first()
+        }
+
+        Log.d("ColorNoteSync", "WidgetConfigActivity: found ${notes.size} notes")
+
+        if (notes.isEmpty()) {
+            Toast.makeText(this, "No notes yet. Create a note first.", Toast.LENGTH_LONG).show()
+            finish()
+            return
         }
 
         val listView = findViewById<ListView>(R.id.noteListView)

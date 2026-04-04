@@ -8,8 +8,10 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.net.Uri
+import android.util.Log
 import android.widget.RemoteViews
 import com.colornote.sync.data.AppDatabase
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 
 class WidgetProvider : AppWidgetProvider() {
@@ -19,10 +21,31 @@ class WidgetProvider : AppWidgetProvider() {
         appWidgetManager: AppWidgetManager,
         appWidgetIds: IntArray
     ) {
+        Log.d("ColorNoteSync", "WidgetProvider.onUpdate: ${appWidgetIds.size} widgets")
         for (appWidgetId in appWidgetIds) {
-            val noteId = getWidgetNoteId(context, appWidgetId)
+            var noteId = getWidgetNoteId(context, appWidgetId)
+            Log.d("ColorNoteSync", "Widget $appWidgetId -> noteId=$noteId")
+
+            // If no note is configured, try to use the first available note
+            if (noteId == null) {
+                val db = AppDatabase.getDatabase(context)
+                val firstNote = runBlocking {
+                    db.noteDao().getAllNotes().first().firstOrNull()
+                }
+                if (firstNote != null) {
+                    noteId = firstNote.note.id
+                    saveWidgetNoteId(context, appWidgetId, noteId)
+                    Log.d("ColorNoteSync", "Widget $appWidgetId: auto-assigned note '${firstNote.note.title}'")
+                }
+            }
+
             if (noteId != null) {
                 updateWidget(context, appWidgetManager, appWidgetId, noteId)
+            } else {
+                // Show empty state
+                val views = RemoteViews(context.packageName, R.layout.widget_note)
+                views.setTextViewText(R.id.widgetTitle, "No notes yet")
+                appWidgetManager.updateAppWidget(appWidgetId, views)
             }
         }
     }
@@ -61,10 +84,12 @@ class WidgetProvider : AppWidgetProvider() {
             appWidgetId: Int,
             noteId: String
         ) {
+            Log.d("ColorNoteSync", "updateWidget: widgetId=$appWidgetId noteId=$noteId")
             val db = AppDatabase.getDatabase(context)
             val noteWithItems = runBlocking {
                 db.noteDao().getNoteById(noteId)
             }
+            Log.d("ColorNoteSync", "updateWidget: note=${noteWithItems?.note?.title}, items=${noteWithItems?.items?.size}")
 
             val views = RemoteViews(context.packageName, R.layout.widget_note)
 

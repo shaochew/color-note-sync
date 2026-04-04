@@ -50,6 +50,9 @@ class NoteDetailActivity : AppCompatActivity() {
     private lateinit var recyclerItems: RecyclerView
     private lateinit var addItemBar: LinearLayout
     private lateinit var btnAddItem: TextView
+    private lateinit var addItemBarBottom: LinearLayout
+    private lateinit var btnAddItemBottom: TextView
+    private lateinit var btnColorPicker: ImageButton
     private lateinit var bottomBar: LinearLayout
     private lateinit var btnUndo: ImageButton
     private lateinit var btnRedo: ImageButton
@@ -85,6 +88,9 @@ class NoteDetailActivity : AppCompatActivity() {
         recyclerItems = findViewById(R.id.recyclerItems)
         addItemBar = findViewById(R.id.addItemBar)
         btnAddItem = findViewById(R.id.btnAddItem)
+        addItemBarBottom = findViewById(R.id.addItemBarBottom)
+        btnAddItemBottom = findViewById(R.id.btnAddItemBottom)
+        btnColorPicker = findViewById(R.id.btnColorPicker)
         bottomBar = findViewById(R.id.bottomBar)
         btnUndo = findViewById(R.id.btnUndo)
         btnRedo = findViewById(R.id.btnRedo)
@@ -134,6 +140,18 @@ class NoteDetailActivity : AppCompatActivity() {
 
         colorPickerSquare.setOnClickListener {
             showColorPickerDialog()
+        }
+
+        btnColorPicker.setOnClickListener {
+            showColorPickerDialog()
+        }
+
+        addItemBarBottom.setOnClickListener {
+            showAddItemDialog()
+        }
+
+        btnAddItemBottom.setOnClickListener {
+            showAddItemDialog()
         }
 
         btnUndo.setOnClickListener { performUndo() }
@@ -193,8 +211,10 @@ class NoteDetailActivity : AppCompatActivity() {
         editTitle.setText(textTitle.text)
 
         colorPickerSquare.visibility = View.VISIBLE
+        btnColorPicker.visibility = View.VISIBLE
         textEditingLabel.visibility = View.VISIBLE
         addItemBar.visibility = View.VISIBLE
+        addItemBarBottom.visibility = View.VISIBLE
         bottomBar.visibility = View.VISIBLE
 
         btnEditSave.setImageResource(R.drawable.ic_check)
@@ -215,8 +235,10 @@ class NoteDetailActivity : AppCompatActivity() {
         editTitle.visibility = View.GONE
 
         colorPickerSquare.visibility = View.GONE
+        btnColorPicker.visibility = View.GONE
         textEditingLabel.visibility = View.GONE
         addItemBar.visibility = View.GONE
+        addItemBarBottom.visibility = View.GONE
         bottomBar.visibility = View.GONE
 
         btnEditSave.setImageResource(R.drawable.ic_edit)

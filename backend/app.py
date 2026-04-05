@@ -177,6 +177,7 @@ def create_note():
     )
     db.session.add(note)
     db.session.commit()
+    backup_to_gist()
     return jsonify(note.to_dict()), 201
 
 
@@ -192,6 +193,7 @@ def update_note(note_id):
         note.color = data["color"]
     note.updated_at = datetime.now(timezone.utc)
     db.session.commit()
+    backup_to_gist()
     return jsonify(note.to_dict()), 200
 
 
@@ -202,6 +204,7 @@ def delete_note(note_id):
         return jsonify({"error": "Note not found"}), 404
     db.session.delete(note)
     db.session.commit()
+    backup_to_gist()
     return jsonify({"message": "Note deleted"}), 200
 
 
@@ -224,6 +227,7 @@ def create_item(note_id):
     db.session.add(item)
     note.updated_at = datetime.now(timezone.utc)
     db.session.commit()
+    backup_to_gist()
     return jsonify(item.to_dict()), 201
 
 
@@ -244,6 +248,7 @@ def update_item(note_id, item_id):
         item.sort_order = data["sort_order"]
     note.updated_at = datetime.now(timezone.utc)
     db.session.commit()
+    backup_to_gist()
     return jsonify(item.to_dict()), 200
 
 
@@ -258,6 +263,7 @@ def delete_item(note_id, item_id):
     db.session.delete(item)
     note.updated_at = datetime.now(timezone.utc)
     db.session.commit()
+    backup_to_gist()
     return jsonify({"message": "Item deleted"}), 200
 
 
@@ -273,6 +279,7 @@ def reorder_items(note_id):
             item.sort_order = entry.get("sort_order", item.sort_order)
     note.updated_at = datetime.now(timezone.utc)
     db.session.commit()
+    backup_to_gist()
     return jsonify(note.to_dict()), 200
 
 

@@ -198,6 +198,13 @@ function initNoteDetailPage() {
     const addItemCancel = document.getElementById('add-item-cancel');
     const addItemOk = document.getElementById('add-item-ok');
 
+    // Edit item modal
+    const editItemModal = document.getElementById('edit-item-modal');
+    const editItemText = document.getElementById('edit-item-text');
+    const editItemCancel = document.getElementById('edit-item-cancel');
+    const editItemOk = document.getElementById('edit-item-ok');
+    let editingItem = null;
+
     // Delete confirm modal
     const deleteModal = document.getElementById('delete-confirm-modal');
     const deleteCancelBtn = document.getElementById('delete-cancel');
@@ -329,6 +336,18 @@ function initNoteDetailPage() {
                 text.style.cursor = 'pointer';
                 check.addEventListener('click', toggle);
                 text.addEventListener('click', toggle);
+            }
+
+            // --- Edit mode: click to edit text ---
+            if (editMode) {
+                text.style.cursor = 'pointer';
+                text.addEventListener('click', () => {
+                    editingItem = item;
+                    editItemText.value = item.text;
+                    editItemModal.style.display = '';
+                    editItemText.focus();
+                    editItemText.select();
+                });
             }
 
             // --- Edit mode: delete ---
@@ -464,6 +483,31 @@ function initNoteDetailPage() {
             e.preventDefault();
             addCurrentItem(false);
         }
+    });
+
+    /* --- Edit item modal --- */
+    editItemCancel.addEventListener('click', () => { editItemModal.style.display = 'none'; editingItem = null; });
+    editItemModal.addEventListener('click', e => { if (e.target === editItemModal) { editItemModal.style.display = 'none'; editingItem = null; } });
+    editItemOk.addEventListener('click', () => {
+        const newText = editItemText.value.trim();
+        if (!newText || !editingItem || newText === editingItem.text) {
+            editItemModal.style.display = 'none';
+            editingItem = null;
+            return;
+        }
+        pushUndo();
+        api('/api/notes/' + noteId + '/items/' + editingItem.id, {
+            method: 'PUT',
+            body: JSON.stringify({ text: newText }),
+        }).then(updated => {
+            editingItem.text = updated.text;
+            renderItems();
+            editItemModal.style.display = 'none';
+            editingItem = null;
+        });
+    });
+    editItemText.addEventListener('keydown', e => {
+        if (e.key === 'Enter') { e.preventDefault(); editItemOk.click(); }
     });
 
     /* --- Undo / Redo --- */

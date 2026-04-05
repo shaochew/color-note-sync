@@ -1,6 +1,10 @@
+import json
+import logging
+import os
 import uuid
 from datetime import datetime, timezone
 
+import requests as http_requests
 from flask import Flask, jsonify, redirect, render_template, request, url_for
 from flask_cors import CORS
 
@@ -15,6 +19,115 @@ CORS(app)
 
 with app.app_context():
     db.create_all()
+
+GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN", "")
+GIST_ID = os.environ.get("GIST_ID", "")
+
+log = logging.getLogger(__name__)
+
+
+def parse_iso_datetime(s):
+    """Parse ISO 8601 string to naive UTC datetime."""
+    if not s:
+        return datetime.now(timezone.utc).replace(tzinfo=None)
+    s = s.replace("Z", "+00:00")
+    dt = datetime.fromisoformat(s)
+    if dt.tzinfo is not None:
+        dt = dt.astimezone(timezone.utc).replace(tzinfo=None)
+    return dt
+
+
+# ---------------------------------------------------------------------------
+# Gist backup / restore
+# ---------------------------------------------------------------------------
+
+def _gist_headers():
+    return {
+        "Authorization": f"Bearer {GITHUB_TOKEN}",
+        "Accept": "application/vnd.github+json",
+    }
+
+
+def backup_to_gist():
+    """Save current DB state to GitHub Gist."""
+    if not GITHUB_TOKEN or not GIST_ID:
+        return
+    try:
+        notes = Note.query.order_by(Note.updated_at.desc()).all()
+        data = json.dumps({"notes": [n.to_dict() for n in notes]}, indent=2)
+        resp = http_requests.patch(
+            f"https://api.github.com/gists/{GIST_ID}",
+            headers=_gist_headers(),
+            json={"files": {"notes_backup.json": {"content": data}}},
+            timeout=15,
+        )
+        if resp.ok:
+            log.info("Gist backup successful")
+        else:
+            log.warning("Gist backup failed: %s %s", resp.status_code, resp.text[:200])
+    except Exception as e:
+        log.warning("Gist backup error: %s", e)
+
+
+def restore_from_gist():
+    """Restore DB from GitHub Gist if DB is empty."""
+    if not GITHUB_TOKEN or not GIST_ID:
+        return
+    try:
+        note_count = Note.query.count()
+        if note_count > 0:
+            log.info("DB has %d notes, skipping gist restore", note_count)
+            return
+
+        resp = http_requests.get(
+            f"https://api.github.com/gists/{GIST_ID}",
+            headers=_gist_headers(),
+            timeout=15,
+        )
+        if not resp.ok:
+            log.warning("Gist fetch failed: %s", resp.status_code)
+            return
+
+        gist_data = resp.json()
+        file_content = gist_data.get("files", {}).get("notes_backup.json", {}).get("content", "")
+        if not file_content:
+            log.info("Gist is empty, nothing to restore")
+            return
+
+        data = json.loads(file_content)
+        incoming_notes = data.get("notes", [])
+        if not incoming_notes:
+            return
+
+        for cn in incoming_notes:
+            note = Note(
+                id=cn.get("id", str(uuid.uuid4())),
+                title=cn.get("title", ""),
+                color=cn.get("color", "#FFEB3B"),
+                updated_at=parse_iso_datetime(cn.get("updated_at")),
+                created_at=parse_iso_datetime(cn.get("created_at")),
+            )
+            db.session.add(note)
+            for ci in cn.get("items", []):
+                item = NoteItem(
+                    id=ci.get("id", str(uuid.uuid4())),
+                    note_id=note.id,
+                    text=ci.get("text", ""),
+                    is_done=ci.get("is_done", False),
+                    sort_order=ci.get("sort_order", 0),
+                    created_at=parse_iso_datetime(ci.get("created_at")),
+                )
+                db.session.add(item)
+
+        db.session.commit()
+        log.info("Restored %d notes from gist", len(incoming_notes))
+    except Exception as e:
+        log.warning("Gist restore error: %s", e)
+        db.session.rollback()
+
+
+with app.app_context():
+    restore_from_gist()
 
 
 # ---------------------------------------------------------------------------
@@ -167,18 +280,6 @@ def reorder_items(note_id):
 # API — Sync
 # ---------------------------------------------------------------------------
 
-def parse_iso_datetime(s):
-    """Parse ISO 8601 string to naive UTC datetime."""
-    if not s:
-        return datetime.now(timezone.utc).replace(tzinfo=None)
-    s = s.replace("Z", "+00:00")
-    dt = datetime.fromisoformat(s)
-    # Convert to naive UTC
-    if dt.tzinfo is not None:
-        dt = dt.astimezone(timezone.utc).replace(tzinfo=None)
-    return dt
-
-
 @app.route("/api/sync", methods=["POST"])
 def sync():
     try:
@@ -229,6 +330,7 @@ def sync():
                 db.session.add(item)
 
         db.session.commit()
+        backup_to_gist()
 
         # Return full server state
         notes = Note.query.order_by(Note.updated_at.desc()).all()
